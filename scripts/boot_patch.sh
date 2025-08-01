@@ -111,11 +111,19 @@ esac
 # Test patch status and do restore
 ui_print "- Checking ramdisk status"
 if [ -e ramdisk.cpio ]; then
-  ./magiskboot cpio ramdisk.cpio test
+  RAMDISK_PATH="ramdisk.cpio"
+  ./magiskboot cpio $RAMDISK_PATH test
+  STATUS=$?
+  SKIP_BACKUP=""
+elif [ -e vendor_ramdisk/init_boot.cpio ]; then
+  # For devices with init ramdisk in vendor_boot (and no init_boot partition/boot ramdisk)
+  RAMDISK_PATH="vendor_ramdisk/init_boot.cpio"
+  ./magiskboot cpio $RAMDISK_PATH test
   STATUS=$?
   SKIP_BACKUP=""
 else
   # Stock A only legacy SAR, or some Android 13 GKIs
+  RAMDISK_PATH="ramdisk.cpio"
   STATUS=0
   SKIP_BACKUP="#"
 fi
@@ -125,15 +133,15 @@ case $STATUS in
     ui_print "- Stock boot image detected"
     SHA1=$(./magiskboot sha1 "$BOOTIMAGE" 2>/dev/null)
     cat $BOOTIMAGE > stock_boot.img
-    cp -af ramdisk.cpio ramdisk.cpio.orig 2>/dev/null
+    cp -af "$RAMDISK_PATH" "$RAMDISK_PATH.orig" 2>/dev/null
     ;;
   1 )
     # Magisk patched
     ui_print "- Magisk patched boot image detected"
-    ./magiskboot cpio ramdisk.cpio \
+    ./magiskboot cpio $RAMDISK_PATH \
     "extract .backup/.magisk config.orig" \
     "restore"
-    cp -af ramdisk.cpio ramdisk.cpio.orig
+    cp -af "$RAMDISK_PATH" "$RAMDISK_PATH.orig"
     rm -f stock_boot.img
     ;;
   2 )
@@ -176,7 +184,7 @@ if [ -n "$PREINITDEVICE" ]; then
 fi
 [ -n "$SHA1" ] && echo "SHA1=$SHA1" >> config
 
-./magiskboot cpio ramdisk.cpio \
+./magiskboot cpio "$RAMDISK_PATH" \
 "add 0750 init magiskinit" \
 "mkdir 0750 overlay.d" \
 "mkdir 0750 overlay.d/sbin" \
@@ -184,12 +192,12 @@ fi
 "add 0644 overlay.d/sbin/stub.xz stub.xz" \
 "add 0644 overlay.d/sbin/init-ld.xz init-ld.xz" \
 "patch" \
-"$SKIP_BACKUP backup ramdisk.cpio.orig" \
+"$SKIP_BACKUP backup $RAMDISK_PATH.orig" \
 "mkdir 000 .backup" \
 "add 000 .backup/.magisk config" \
 || abort "! Unable to patch ramdisk"
 
-rm -f ramdisk.cpio.orig config *.xz
+rm -f $RAMDISK_PATH.orig config *.xz
 
 #################
 # Binary Patches

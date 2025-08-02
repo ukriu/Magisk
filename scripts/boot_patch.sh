@@ -116,7 +116,8 @@ if [ -e ramdisk.cpio ]; then
   STATUS=$?
   SKIP_BACKUP=""
 elif [ -e vendor_ramdisk/init_boot.cpio ]; then
-  # For devices with init ramdisk in vendor_boot (and no init_boot partition/boot ramdisk)
+  # For devices with init ramdisk in vendor_boot
+  # (and no init_boot partition/boot ramdisk)
   RAMDISK_PATH="vendor_ramdisk/init_boot.cpio"
   ./magiskboot cpio $RAMDISK_PATH test
   STATUS=$?

@@ -579,10 +579,10 @@ abstract class MagiskInstallImpl protected constructor(
 
     protected suspend fun patchFile(file: Uri) = extractFiles() && processFile(file)
 
-    protected suspend fun direct() = findImage() && extractFiles() && patchBoot() && flashBoot()
+    protected suspend fun direct() = extractFiles() && findImage() && patchBoot() && flashBoot()
 
     protected suspend fun secondSlot() =
-        findSecondary() && extractFiles() && patchBoot() && flashBoot() && postOTA()
+        extractFiles() && findSecondary() && patchBoot() && flashBoot() && postOTA()
 
     protected suspend fun fixEnv() = extractFiles() && "fix_env $installDir".sh().isSuccess
 
